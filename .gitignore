@@ -1,0 +1,6 @@
+models/*.pth
+models/pretrained/
+__pycache__/
+.pytest_cache/
+.venv/
+.DS_Store

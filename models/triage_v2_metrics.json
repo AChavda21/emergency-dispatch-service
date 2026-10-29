@@ -1,0 +1,49 @@
+{
+  "accuracy": 1.0,
+  "macro_f1": 1.0,
+  "per_class_f1": {
+    "MEDICAL": 1.0,
+    "FIRE": 1.0,
+    "VIOLENT CRIME": 1.0,
+    "NON-VIOLENT CRIME": 1.0,
+    "RESCUE & HAZMAT": 1.0
+  },
+  "confusion_matrix": [
+    [
+      76,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      82,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      83,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      80,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      80
+    ]
+  ],
+  "epoch": 5
+}

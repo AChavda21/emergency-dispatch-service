@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>NEXUS Dispatch</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2306b6d4' d='M13 2 4 14h7l-1 8 9-12h-7z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <script type="module" src="/static/js/app.js"></script>
+</head>
+<body>
+<div class="app">
+
+    <!-- Global Header -->
+    <div>
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">N</div>
+                <div>
+                    <div class="brand-name">NEXUS<span>DISPATCH</span></div>
+                    <div class="brand-sector">YEG Metro Sector · AI Triage Command Center</div>
+                </div>
+            </div>
+
+            <div class="topbar-status" aria-label="System status">
+                <span class="status-pill" id="health-model" data-state="warn">Checking model…</span>
+                <span class="status-pill" id="health-socket" data-state="warn">Connecting…</span>
+                <span class="status-pill" id="health-device" data-state="warn">—</span>
+            </div>
+
+            <div class="topbar-actions">
+                <span class="clock" id="clock" aria-label="Current time">--:--:--</span>
+                <button class="btn" id="btn-audio" type="button" aria-pressed="false" title="Toggle audio alerts (m)">
+                    <span aria-hidden="true">🔔</span><span class="btn-label">Audio off</span>
+                </button>
+                <button class="btn" id="btn-export" type="button" title="Export the current view as CSV">
+                    <span aria-hidden="true">⤓</span><span class="btn-label">Export</span>
+                </button>
+                <button class="btn btn-primary" id="btn-new-call" type="button" title="Triage a call manually (n)">
+                    <span aria-hidden="true">＋</span><span class="btn-label">New call</span>
+                </button>
+            </div>
+        </header>
+        <div class="banner" id="banner" role="alert"></div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+
+        <!-- Left Panel: Telemetry & Analytics -->
+        <aside class="sidebar" aria-label="Shift metrics">
+            <section class="panel">
+                <h2 class="panel-title">Shift metrics</h2>
+                <div class="kpi-grid">
+                    <div class="kpi"><div class="kpi-value" id="kpi-total">0</div><div class="kpi-label">Processed</div></div>
+                    <div class="kpi" data-tone="danger"><div class="kpi-value" id="kpi-critical">0</div><div class="kpi-label">High severity</div></div>
+                    <div class="kpi" data-tone="warn"><div class="kpi-value" id="kpi-review">0</div><div class="kpi-label">Needs review</div></div>
+                    <div class="kpi"><div class="kpi-value" id="kpi-open">0</div><div class="kpi-label">Open</div></div>
+                    <div class="kpi"><div class="kpi-value" id="kpi-confidence">—</div><div class="kpi-label">Avg confidence</div></div>
+                    <div class="kpi"><div class="kpi-value" id="kpi-rate">0.0</div><div class="kpi-label">Calls / min (5m)</div></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Routing breakdown</h2>
+                <div class="dept-bars" id="dept-bars"></div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Call volume <span>30 min</span></h2>
+                <svg class="sparkline" id="volume-chart" viewBox="0 0 300 64" preserveAspectRatio="none" role="img" aria-label="Calls per minute over the last 30 minutes"></svg>
+                <div class="sparkline-axis"><span>30m ago</span><span>now</span></div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Keyboard</h2>
+                <div class="shortcuts" id="shortcuts"></div>
+            </section>
+        </aside>
+
+        <!-- Center Panel: Live Queue -->
+        <section class="panel feed" aria-label="Dispatch feed">
+            <div class="feed-header">
+                <h2 class="panel-title"><span><span class="live-dot" id="live-dot" aria-hidden="true"></span>Active dispatch feed</span></h2>
+                <span class="badge badge-id" id="feed-count">0</span>
+            </div>
+
+            <div class="toolbar" role="search">
+                <label class="search">
+                    <span class="sr-only">Search calls</span>
+                    <input class="input" id="filter-search" type="search" placeholder="Search transcript, caller, incident ID…" autocomplete="off">
+                    <span class="kbd" aria-hidden="true">/</span>
+                </label>
+                <label>
+                    <span class="sr-only">Department</span>
+                    <select class="select" id="filter-department"><option value="">All departments</option></select>
+                </label>
+                <label>
+                    <span class="sr-only">Severity</span>
+                    <select class="select" id="filter-severity">
+                        <option value="">All severities</option>
+                        <option value="high">High severity</option>
+                        <option value="standard">Standard</option>
+                    </select>
+                </label>
+                <label>
+                    <span class="sr-only">Status</span>
+                    <select class="select" id="filter-status">
+                        <option value="">All statuses</option>
+                        <option value="OPEN">Open (not resolved)</option>
+                        <option value="NEW">New</option>
+                        <option value="ACKNOWLEDGED">Acknowledged</option>
+                        <option value="DISPATCHED">Dispatched</option>
+                        <option value="RESOLVED">Resolved</option>
+                    </select>
+                </label>
+                <button class="btn" id="filter-review" type="button" aria-pressed="false">Needs review</button>
+                <button class="btn btn-ghost" id="btn-clear-filters" type="button" hidden>Clear filters</button>
+            </div>
+
+            <div class="feed-list" id="feed-list" role="listbox" aria-label="Triaged calls"></div>
+
+            <div class="feed-footer">
+                <span id="feed-footer-left"></span>
+                <span id="feed-footer-right">Newest first</span>
+            </div>
+        </section>
+
+        <!-- Right Panel: Incident Detail -->
+        <aside class="panel detail" id="detail" aria-label="Incident details">
+            <div class="detail-body" id="detail-body"></div>
+        </aside>
+    </main>
+</div>
+
+<!-- Manual triage -->
+<dialog id="new-call-dialog" aria-labelledby="new-call-title">
+    <form id="new-call-form" novalidate>
+        <div class="dialog-header">
+            <h2 id="new-call-title">Triage a call</h2>
+            <button class="btn btn-ghost" id="new-call-close" type="button" aria-label="Close">✕</button>
+        </div>
+        <div class="dialog-body">
+            <label class="field">
+                <span class="field-label">Caller ID</span>
+                <input class="input" id="new-call-caller" maxlength="64" required autocomplete="off">
+            </label>
+            <label class="field">
+                <span class="field-label">Transcript</span>
+                <textarea class="textarea" id="new-call-transcript" rows="4" maxlength="2000" required
+                          placeholder="Paste or type what the caller said…"></textarea>
+                <span class="field-hint">Only the first 64 tokens are read by the model.</span>
+            </label>
+            <div class="field">
+                <span class="field-label">Samples</span>
+                <div class="samples" id="new-call-samples"></div>
+            </div>
+            <div class="form-error" id="new-call-error" role="alert"></div>
+        </div>
+        <div class="dialog-footer">
+            <button class="btn btn-ghost" id="new-call-cancel" type="button">Cancel</button>
+            <button class="btn btn-primary" id="new-call-submit" type="submit">Triage call</button>
+        </div>
+    </form>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="sr-only" id="live-announcer" aria-live="assertive"></div>
+
+</body>
+</html>
